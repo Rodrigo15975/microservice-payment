@@ -1,19 +1,17 @@
-import { Module } from '@nestjs/common'
-import { PaymentService } from './payment.service'
-import { PaymentController } from './payment.controller'
 import { StripeModule } from '@golevelup/nestjs-stripe'
+import { Module } from '@nestjs/common'
+import { ConfigModule, ConfigService } from '@nestjs/config'
+import { PaymentController } from './payment.controller'
+import { PaymentService } from './payment.service'
+
 @Module({
   imports: [
-    StripeModule.forRoot({
-      apiKey: 'sk_***',
-      webhookConfig: {
-        stripeSecrets: {
-          account: 'whsec_***',
-          accountTest: 'whsec_***',
-          connect: 'whsec_***',
-          connectTest: 'whsec_***',
-        },
-      },
+    ConfigModule.forRoot(),
+    StripeModule.forRootAsync({
+      useFactory: (configService: ConfigService) => ({
+        apiKey: configService.getOrThrow('STRIPE_SECRET_KEY'),
+      }),
+      inject: [ConfigService],
     }),
   ],
   controllers: [PaymentController],
