@@ -1,7 +1,6 @@
 import { StripeModule } from '@golevelup/nestjs-stripe'
 import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { PaymentController } from './payment.controller'
 import { PaymentService } from './payment.service'
 import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq'
 import { configExchange, configQueue } from './common/config-rabbit'
@@ -34,7 +33,7 @@ import { configExchange, configQueue } from './common/config-rabbit'
       inject: [ConfigService],
     }),
   ],
-  controllers: [PaymentController],
+  controllers: [],
   providers: [PaymentService],
 })
 export class PaymentModule {}
