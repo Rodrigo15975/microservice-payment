@@ -3,10 +3,22 @@ import { Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { PaymentController } from './payment.controller'
 import { PaymentService } from './payment.service'
+import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq'
+import { configExchange, configQueue } from './common/config-rabbit'
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    RabbitMQModule.forRootAsync({
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.getOrThrow('RABBITMQ_URL'),
+        exchanges: configExchange,
+        queues: configQueue,
+      }),
+      inject: [ConfigService],
+    }),
+    ConfigModule.forRoot({
+      envFilePath: `.env.${process.env.NODE_ENV || 'local'}`,
+    }),
     StripeModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         apiKey: configService.getOrThrow<string>('STRIPE_SECRET_KEY'),
