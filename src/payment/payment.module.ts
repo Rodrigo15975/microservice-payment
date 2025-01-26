@@ -9,7 +9,15 @@ import { PaymentService } from './payment.service'
     ConfigModule.forRoot(),
     StripeModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
-        apiKey: configService.getOrThrow('STRIPE_SECRET_KEY'),
+        apiKey: configService.getOrThrow<string>('STRIPE_SECRET_KEY'),
+        webhookConfig: {
+          stripeSecrets: {
+            account: configService.getOrThrow<string>(
+              'STRIPE_WEBHOOK_SECRET_ACCOUNT',
+            ),
+          },
+          requestBodyProperty: 'rawBody',
+        },
       }),
       inject: [ConfigService],
     }),
