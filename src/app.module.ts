@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { PaymentModule } from './payment/payment.module'
 import { ConfigModule } from '@nestjs/config'
+import { WebhooksModule } from './webhooks/webhooks.module'
 @Module({
   imports: [
     PaymentModule,
@@ -11,6 +12,7 @@ import { ConfigModule } from '@nestjs/config'
           : '.env.local',
       isGlobal: true,
     }),
+    WebhooksModule,
   ],
   controllers: [],
   providers: [],
