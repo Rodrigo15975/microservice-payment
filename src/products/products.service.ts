@@ -10,10 +10,6 @@ import Stripe from 'stripe'
 export class ProductsService {
   private readonly logger: Logger = new Logger(ProductsService.name)
   constructor(private readonly amqConnection: AmqpConnection) {}
-
-  /**
-   * decrementStock
-   */
   public async decrementStock(metadata: Stripe.Metadata) {
     try {
       console.log({
