@@ -1,17 +1,29 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import Stripe from 'stripe'
 import { UpdateWebhookDto } from './dto/update-webhook.dto'
 import { StripeWebhookHandler } from '@golevelup/nestjs-stripe'
+import { ProductsService } from 'src/products/products.service'
+import { OrdersService } from 'src/orders/orders.service'
 
 @Injectable()
 export class WebhooksService {
+  private readonly logger: Logger = new Logger(WebhooksService.name)
+
+  constructor(
+    private readonly productService: ProductsService,
+    private readonly ordersService: OrdersService,
+  ) {}
+
   @StripeWebhookHandler('checkout.session.completed')
   handleCheckoutSessionCompleted(event: Stripe.CheckoutSessionCompletedEvent) {
-    console.debug('completed:', event.data.object.metadata)
+    const { metadata } = event.data.object
+    this.productService.decrementStock(metadata)
+    this.ordersService.create(metadata)
+    this.logger.debug('Payment completed')
   }
 
   @StripeWebhookHandler('checkout.session.expired')
-  handledSessionTest(event: Stripe.CheckoutSessionExpiredEvent) {
+  handleSessionExpired(event: Stripe.CheckoutSessionExpiredEvent) {
     console.debug('expirated:', event)
   }
 

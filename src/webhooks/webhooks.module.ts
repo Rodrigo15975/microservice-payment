@@ -1,11 +1,15 @@
-import { Module } from '@nestjs/common'
-import { WebhooksService } from './webhooks.service'
-import { WebhooksController } from './webhooks.controller'
-import { ConfigService } from '@nestjs/config'
 import { StripeModule } from '@golevelup/nestjs-stripe'
+import { Module } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { ProductsModule } from 'src/products/products.module'
+import { WebhooksController } from './webhooks.controller'
+import { WebhooksService } from './webhooks.service'
+import { OrdersModule } from 'src/orders/orders.module'
 
 @Module({
   imports: [
+    ProductsModule,
+    OrdersModule,
     StripeModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         apiKey: configService.getOrThrow<string>('STRIPE_SECRET_KEY'),
