@@ -19,13 +19,13 @@ export class WebhooksController {
   @StripeWebhookHandler('checkout.session.completed')
   @Post()
   handleSessionCompleted(@Body() event: Stripe.CheckoutSessionCompletedEvent) {
-    console.log('Session Completed:', event.data.object.metadata)
+    return this.webhooksService.handleCheckoutSessionCompleted(event)
   }
 
   @StripeWebhookHandler('checkout.session.expired')
   @Post()
   handleSessionExpired(@Body() event: Stripe.CheckoutSessionExpiredEvent) {
-    console.log('Session Expired:', event)
+    return this.webhooksService.handleSessionExpired(event)
   }
 
   @Get()
