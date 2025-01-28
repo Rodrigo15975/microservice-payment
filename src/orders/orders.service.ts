@@ -5,6 +5,7 @@ import {
   Logger,
 } from '@nestjs/common'
 import Stripe from 'stripe'
+import { configRabbit } from './common/configRabbit'
 
 @Injectable()
 export class OrdersService {
@@ -13,9 +14,12 @@ export class OrdersService {
 
   create(metadata: Stripe.Metadata) {
     try {
-      console.log({
+      this.logger.verbose('Send order to create in DB-CLIENT-ORDER...')
+      this.amqConnection.publish(
+        configRabbit.ROUTING_EXCHANGE_CREATE_ORDERS,
+        configRabbit.ROUTING_ROUTINGKEY_CREATE_ORDERS,
         metadata,
-      })
+      )
     } catch (error) {
       this.logger.error('Error in method create order')
       throw new InternalServerErrorException({
