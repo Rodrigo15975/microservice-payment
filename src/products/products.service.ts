@@ -13,7 +13,7 @@ export class ProductsService {
   public async decrementStock(metadata: Stripe.Metadata) {
     try {
       console.log({
-        metadata,
+        decrement: metadata,
       })
     } catch (error) {
       this.logger.error('Error send decremente stock in product DB-WRITE-READ')
