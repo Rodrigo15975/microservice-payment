@@ -4,15 +4,16 @@ import {
 } from '@golevelup/nestjs-rabbitmq'
 
 export const configRabbit = {
-  ROUTING_EXCHANGE_DECREMENT_STOCK_PRODUCT: 'product.decrement.stock.product',
-  ROUTING_ROUTINGKEY_DECREMENT_STOCK_PRODUCT: 'product.decrement.stock.product',
-  ROUTING_QUEUE_DECREMENT_STOCK_PRODUCT: 'product.decrement.stock.product',
+  EXCHANGE_NAME_DECREMENTE_STOCK: 'decrement.stock',
+  QUEUE_NAME_DECREMENTE_STOCK: 'decrement.stock',
+  ROUTING_KEY_DECREMENTE_STOCK: 'decrement-.tock',
 }
+
 export const configQueue: RabbitMQQueueConfig[] = [
   {
-    name: configRabbit.ROUTING_QUEUE_DECREMENT_STOCK_PRODUCT,
-    routingKey: configRabbit.ROUTING_QUEUE_DECREMENT_STOCK_PRODUCT,
-    exchange: configRabbit.ROUTING_QUEUE_DECREMENT_STOCK_PRODUCT,
+    name: configRabbit.QUEUE_NAME_DECREMENTE_STOCK,
+    routingKey: configRabbit.ROUTING_KEY_DECREMENTE_STOCK,
+    exchange: configRabbit.EXCHANGE_NAME_DECREMENTE_STOCK,
     options: {
       durable: true,
     },
@@ -20,7 +21,8 @@ export const configQueue: RabbitMQQueueConfig[] = [
 ]
 export const configExchange: RabbitMQExchangeConfig[] = [
   {
-    name: configRabbit.ROUTING_EXCHANGE_DECREMENT_STOCK_PRODUCT,
+    name: configRabbit.EXCHANGE_NAME_DECREMENTE_STOCK,
+
     type: 'direct',
     options: {
       durable: true,
