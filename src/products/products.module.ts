@@ -15,7 +15,6 @@ import { ConfigService } from '@nestjs/config'
       inject: [ConfigService],
     }),
   ],
-  controllers: [],
   providers: [ProductsService],
   exports: [ProductsService],
 })
