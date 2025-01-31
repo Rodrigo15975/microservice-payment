@@ -14,14 +14,14 @@ export class OrdersService {
 
   create(metadata: Stripe.Metadata) {
     try {
-      this.logger.verbose('Send order to create in DB-CLIENT-ORDER...')
       this.amqConnection.publish(
         configRabbit.ROUTING_EXCHANGE_CREATE_ORDERS,
         configRabbit.ROUTING_ROUTINGKEY_CREATE_ORDERS,
         metadata,
       )
+      this.logger.verbose('Send order to create in DB-CLIENT-ORDER...')
     } catch (error) {
-      this.logger.error('Error in method create order')
+      this.logger.error('Error in method create order (db-clients)')
       throw new InternalServerErrorException({
         message: error.message,
         error,

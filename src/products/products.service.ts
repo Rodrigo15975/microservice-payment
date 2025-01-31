@@ -12,10 +12,6 @@ export class ProductsService {
   private readonly logger: Logger = new Logger(ProductsService.name)
   constructor(private readonly amqConnection: AmqpConnection) {}
   public decrementStock(metadata: Stripe.Metadata) {
-    console.log({
-      metadata,
-    })
-
     try {
       this.amqConnection.publish(
         configRabbit.EXCHANGE_NAME_DECREMENTE_STOCK,

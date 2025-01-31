@@ -1,9 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common'
-import Stripe from 'stripe'
-import { UpdateWebhookDto } from './dto/update-webhook.dto'
 import { StripeWebhookHandler } from '@golevelup/nestjs-stripe'
-import { ProductsService } from 'src/products/products.service'
+import { Injectable, Logger } from '@nestjs/common'
 import { OrdersService } from 'src/orders/orders.service'
+import { ProductsService } from 'src/products/products.service'
+import Stripe from 'stripe'
 
 @Injectable()
 export class WebhooksService {
@@ -16,9 +15,10 @@ export class WebhooksService {
 
   @StripeWebhookHandler('checkout.session.completed')
   handleCheckoutSessionCompleted(event: Stripe.CheckoutSessionCompletedEvent) {
+    const statusPayment = event.data.object.payment_status
     const { metadata } = event.data.object
-    this.productService.decrementStock(metadata)
-    this.ordersService.create(metadata)
+    this.productService.decrementStock({ ...metadata, statusPayment })
+    this.ordersService.create({ ...metadata, statusPayment })
     this.logger.debug('Payment completed')
   }
 
@@ -27,23 +27,13 @@ export class WebhooksService {
     console.debug('expirated:', event)
   }
 
-  findAll() {
-    return `This action returns all webhooks`
+  @StripeWebhookHandler('checkout.session.async_payment_failed')
+  handleSessionFailed(event: Stripe.CheckoutSessionExpiredEvent) {
+    console.debug('failed:', event)
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} webhook`
-  }
-
-  update(id: number, updateWebhookDto: UpdateWebhookDto) {
-    console.log({
-      updateWebhookDto,
-    })
-
-    return `This action updates a #${id} webhook`
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} webhook`
+  @StripeWebhookHandler('checkout.session.async_payment_succeeded')
+  handleSessionPaymentSucceeded(event: Stripe.CheckoutSessionExpiredEvent) {
+    console.debug('failed:', event)
   }
 }
