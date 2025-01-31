@@ -3,7 +3,11 @@ import { Injectable, Logger } from '@nestjs/common'
 import Stripe from 'stripe'
 import { CreatePaymentDto } from './dto/create-payment.dto'
 import { UpdatePaymentDto } from './dto/update-payment.dto'
-import { RabbitPayload, RabbitRPC } from '@golevelup/nestjs-rabbitmq'
+import {
+  AmqpConnection,
+  RabbitPayload,
+  RabbitRPC,
+} from '@golevelup/nestjs-rabbitmq'
 import { configRabbit } from './common/config-rabbit'
 import { randomUUID } from 'crypto'
 
@@ -11,7 +15,10 @@ import { randomUUID } from 'crypto'
 export class PaymentService {
   private readonly orderId = randomUUID().toString()
   private readonly logger: Logger = new Logger(PaymentService.name)
-  constructor(@InjectStripeClient() private readonly stripeClient: Stripe) {}
+  constructor(
+    @InjectStripeClient() private readonly stripeClient: Stripe,
+    private readonly amqAconnection: AmqpConnection,
+  ) {}
 
   @RabbitRPC({
     exchange: configRabbit.ROUTING_EXCHANGE_CREATE_PAYMENT,
@@ -22,6 +29,7 @@ export class PaymentService {
   async create(@RabbitPayload() data: CreatePaymentDto) {
     this.logger.verbose('Initial payment... ')
     const { dataFormat, emailUser, idUser, totalPrice } = data
+
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
       dataFormat.map((item) => ({
         quantity: item.quantity_buy,
@@ -48,6 +56,12 @@ export class PaymentService {
       ),
       userId: idUser,
     })
+    this.logger.verbose('Publish order for create in DB-CLIENT-ORDER... ')
+    this.amqAconnection.publish(
+      configRabbit.ROUTING_EXCHANGE_GET_ALL_ORDERS,
+      configRabbit.ROUTING_ROUTINGKEY_GET_ALL_ORDERS,
+      data,
+    )
     this.logger.verbose('Final payment... ')
     return {
       sessionId: session.id,
