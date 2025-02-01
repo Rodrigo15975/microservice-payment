@@ -22,4 +22,5 @@ export class CreatePaymentDto {
   }[]
   emailUser: string
   idUser: string
+  discount: number
 }

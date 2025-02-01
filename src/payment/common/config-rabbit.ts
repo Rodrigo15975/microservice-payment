@@ -8,9 +8,9 @@ export const configRabbit = {
   ROUTING_ROUTINGKEY_CREATE_PAYMENT: 'payment.create.payment',
   ROUTING_QUEUE_CREATE_PAYMENT: 'payment.create.payment',
 
-  ROUTING_EXCHANGE_GET_ALL_ORDERS: 'client.get.all.order',
-  ROUTING_ROUTINGKEY_GET_ALL_ORDERS: 'client.get.all.order',
-  ROUTING_QUEUE_GET_ALL_ORDERS: 'client.get.all.order',
+  ROUTING_EXCHANGE_GET_ALL_ORDERS: 'client.get.all.orders',
+  ROUTING_ROUTINGKEY_GET_ALL_ORDERS: 'client.get.all.orders',
+  ROUTING_QUEUE_GET_ALL_ORDERS: 'client.get.all.orders',
 }
 export const configQueue: RabbitMQQueueConfig[] = [
   {
@@ -28,7 +28,7 @@ export const configQueue: RabbitMQQueueConfig[] = [
     options: {
       durable: true,
       // expires: 60000,
-      // messageTtl: 30000, // Los mensajes expiran si no son consumidos en el tiempo definido.
+      messageTtl: 60000, // Los mensajes expiran si no son consumidos en el tiempo definido.
       // autoDelete: true, //Borra la cola cuando ya no hay consumidores activos.
     },
   },
@@ -47,7 +47,7 @@ export const configExchange: RabbitMQExchangeConfig[] = [
     options: {
       durable: true,
       // expires: 60000,
-      // messageTtl: 30000, // Los mensajes expiran si no son consumidos en el tiempo definido.
+      messageTtl: 60000, // Los mensajes expiran si no son consumidos en el tiempo definido.
       // autoDelete: true, //Borra la cola cuando ya no hay consumidores activos.
     },
   },
