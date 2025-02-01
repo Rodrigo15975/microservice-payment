@@ -1,14 +1,14 @@
 import { StripeModule } from '@golevelup/nestjs-stripe'
 import { Module } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { ProductsModule } from 'src/products/products.module'
+// import { ProductsModule } from 'src/products/products.module'
 import { WebhooksController } from './webhooks.controller'
 import { WebhooksService } from './webhooks.service'
 import { OrdersModule } from 'src/orders/orders.module'
 
 @Module({
   imports: [
-    ProductsModule,
+    // ProductsModule,
     OrdersModule,
     StripeModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
