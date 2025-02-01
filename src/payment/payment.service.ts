@@ -29,20 +29,28 @@ export class PaymentService {
   async create(@RabbitPayload() data: CreatePaymentDto) {
     this.logger.verbose('Initial payment... ')
     const { dataFormat, emailUser, idUser, totalPrice } = data
-
+    const originalTotalPrice = dataFormat.reduce(
+      (total, item) => total + item.price * item.quantity_buy,
+      0,
+    )
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
-      dataFormat.map((item) => ({
-        quantity: item.quantity_buy,
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            images: item.productVariant.map((item) => item.url),
-            name: item.product,
-            description: item.brand,
+      dataFormat.map((item) => {
+        const itemProportion =
+          (item.price * item.quantity_buy) / originalTotalPrice
+        const unitAmount = (totalPrice * itemProportion) / item.quantity_buy
+        return {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              images: item.productVariant.map((variant) => variant.url),
+              name: item.product,
+              description: item.brand,
+            },
+            unit_amount: Math.round(unitAmount * 100),
           },
-          unit_amount: item.price * 100,
-        },
-      }))
+          quantity: item.quantity_buy,
+        }
+      })
 
     const session = await this.createSession(lineItems, {
       amount_total: totalPrice,
@@ -57,16 +65,20 @@ export class PaymentService {
       userId: idUser,
     })
     this.logger.verbose('Publish order for create in DB-CLIENT-ORDER... ')
-    this.amqAconnection.publish(
-      configRabbit.ROUTING_EXCHANGE_GET_ALL_ORDERS,
-      configRabbit.ROUTING_ROUTINGKEY_GET_ALL_ORDERS,
-      data,
-    )
+    this.publishOrdersClient(data)
     this.logger.verbose('Final payment... ')
     return {
       sessionId: session.id,
       url: session.url,
     }
+  }
+
+  private publishOrdersClient(data: CreatePaymentDto) {
+    this.amqAconnection.publish(
+      configRabbit.ROUTING_EXCHANGE_GET_ALL_ORDERS,
+      configRabbit.ROUTING_ROUTINGKEY_GET_ALL_ORDERS,
+      data,
+    )
   }
 
   private async createSession(
@@ -86,7 +98,7 @@ export class PaymentService {
       line_items: lineItems,
       mode: 'payment',
       // agregar url de redireccion de sucess y cancel
-      success_url: 'http://localhost:3000/shop',
+      success_url: 'http://localhost:3000/products',
       cancel_url: 'http://localhost:3000/',
       customer_email: emailUser,
       metadata: {
@@ -95,6 +107,7 @@ export class PaymentService {
         amount_total,
         orderId,
       },
+      currency: 'usd',
     })
     return sesion
   }
