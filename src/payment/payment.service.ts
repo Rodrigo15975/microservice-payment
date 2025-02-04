@@ -1,15 +1,14 @@
-import { InjectStripeClient } from '@golevelup/nestjs-stripe'
-import { Injectable, Logger } from '@nestjs/common'
-import Stripe from 'stripe'
-import { CreatePaymentDto } from './dto/create-payment.dto'
-import { UpdatePaymentDto } from './dto/update-payment.dto'
 import {
   AmqpConnection,
   RabbitPayload,
   RabbitRPC,
 } from '@golevelup/nestjs-rabbitmq'
-import { configRabbit } from './common/config-rabbit'
+import { InjectStripeClient } from '@golevelup/nestjs-stripe'
+import { Injectable, Logger } from '@nestjs/common'
 import { randomUUID } from 'crypto'
+import Stripe from 'stripe'
+import { configRabbit } from './common/config-rabbit'
+import { CreatePaymentDto } from './dto/create-payment.dto'
 
 @Injectable()
 export class PaymentService {
@@ -18,7 +17,14 @@ export class PaymentService {
   constructor(
     @InjectStripeClient() private readonly stripeClient: Stripe,
     private readonly amqAconnection: AmqpConnection,
-  ) {}
+  ) {
+    this.logger.debug(
+      'SUCCESS_URL',
+      process.env.NODE_ENV === 'production'
+        ? process.env.SUCCESS_URL
+        : process.env.SUCCESS_URL,
+    )
+  }
 
   @RabbitRPC({
     exchange: configRabbit.ROUTING_EXCHANGE_CREATE_PAYMENT,
@@ -29,11 +35,14 @@ export class PaymentService {
   async create(@RabbitPayload() data: CreatePaymentDto) {
     this.logger.verbose('Initial payment... ')
     const { dataFormat, emailUser, idUser, totalPrice } = data
-    this.logger.debug(dataFormat)
     const originalTotalPrice = dataFormat.reduce(
       (total, item) => total + item.price * item.quantity_buy,
       0,
     )
+    console.log(
+      dataFormat.map((item) => item.productVariant.map((i) => i.url)).flat(),
+    )
+    // return
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
       dataFormat.map((item) => {
         const itemProportion =
@@ -43,7 +52,7 @@ export class PaymentService {
           price_data: {
             currency: 'usd',
             product_data: {
-              images: item.productVariant.map(({ url }) => url.trim()),
+              images: item.productVariant.map((i) => i.url),
               name: item.product,
               description: item.brand,
             },
@@ -74,14 +83,6 @@ export class PaymentService {
     }
   }
 
-  private publishOrdersClient(data: CreatePaymentDto) {
-    this.amqAconnection.publish(
-      configRabbit.ROUTING_EXCHANGE_GET_ALL_ORDERS,
-      configRabbit.ROUTING_ROUTINGKEY_GET_ALL_ORDERS,
-      data,
-    )
-  }
-
   private async createSession(
     lineItems: Stripe.Checkout.SessionCreateParams.LineItem[],
     metadata: {
@@ -93,13 +94,14 @@ export class PaymentService {
     },
   ) {
     const { amount_total, orderId, productIds, userId, emailUser } = metadata
+    const successUrl = `${process.env.SUCCESS_URL || 'http://localhost:3000/orders'}?orderId=${orderId}&color=red` // Añade el color u otros datos
+    console.log(successUrl)
 
     const sesion = await this.stripeClient.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      // agregar url de redireccion de sucess y cancel
-      success_url: 'http://localhost:3000/products',
+      success_url: 'http://localhost:3000/orders',
       cancel_url: 'http://localhost:3000/',
       customer_email: emailUser,
       metadata: {
@@ -111,30 +113,15 @@ export class PaymentService {
       },
       currency: 'usd',
     })
+    console.log({ sesion })
+
     return sesion
   }
-
-  findAll() {
-    console.log({
-      message: 'hola',
-    })
-
-    return `This action returns all payment`
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} payment`
-  }
-
-  update(id: number, updatePaymentDto: UpdatePaymentDto) {
-    console.log({
-      updatePaymentDto,
-    })
-
-    return `This action updates a #${id} payment`
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} payment`
+  private publishOrdersClient(data: CreatePaymentDto) {
+    this.amqAconnection.publish(
+      configRabbit.ROUTING_EXCHANGE_GET_ALL_ORDERS,
+      configRabbit.ROUTING_ROUTINGKEY_GET_ALL_ORDERS,
+      data,
+    )
   }
 }
