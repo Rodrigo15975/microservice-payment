@@ -29,6 +29,7 @@ export class PaymentService {
   async create(@RabbitPayload() data: CreatePaymentDto) {
     this.logger.verbose('Initial payment... ')
     const { dataFormat, emailUser, idUser, totalPrice } = data
+    this.logger.debug(dataFormat)
     const originalTotalPrice = dataFormat.reduce(
       (total, item) => total + item.price * item.quantity_buy,
       0,
@@ -42,7 +43,7 @@ export class PaymentService {
           price_data: {
             currency: 'usd',
             product_data: {
-              images: item.productVariant.map((variant) => variant.url),
+              images: item.productVariant.map(({ url }) => url.trim()),
               name: item.product,
               description: item.brand,
             },
@@ -103,6 +104,7 @@ export class PaymentService {
       customer_email: emailUser,
       metadata: {
         userId,
+        emailUser,
         productIds,
         amount_total,
         orderId,
