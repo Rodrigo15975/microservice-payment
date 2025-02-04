@@ -4,7 +4,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { PaymentService } from './payment.service'
 import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq'
 import { configExchange, configQueue } from './common/config-rabbit'
-// import { configExchange, configQueue } from './common/config-rabbit'
 
 @Module({
   imports: [
