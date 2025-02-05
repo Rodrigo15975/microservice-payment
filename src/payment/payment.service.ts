@@ -34,15 +34,11 @@ export class PaymentService {
   })
   async create(@RabbitPayload() data: CreatePaymentDto) {
     this.logger.verbose('Initial payment... ')
-    const { dataFormat, emailUser, idUser, totalPrice } = data
+    const { dataFormat, emailUser, idUser, totalPrice, codeUsed } = data
     const originalTotalPrice = dataFormat.reduce(
       (total, item) => total + item.price * item.quantity_buy,
       0,
     )
-    console.log(
-      dataFormat.map((item) => item.productVariant.map((i) => i.url)).flat(),
-    )
-    // return
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
       dataFormat.map((item) => {
         const itemProportion =
@@ -73,6 +69,7 @@ export class PaymentService {
           .split(','),
       ),
       userId: idUser,
+      codeUsed: JSON.stringify(codeUsed),
     })
     this.logger.verbose('Publish order for create in DB-CLIENT-ORDER... ')
     this.publishOrdersClient(data)
@@ -91,11 +88,11 @@ export class PaymentService {
       amount_total: number
       orderId: string
       emailUser: string
+      codeUsed: string
     },
   ) {
-    const { amount_total, orderId, productIds, userId, emailUser } = metadata
-    const successUrl = `${process.env.SUCCESS_URL || 'http://localhost:3000/orders'}?orderId=${orderId}&color=red` // Añade el color u otros datos
-    console.log(successUrl)
+    const { amount_total, orderId, productIds, userId, emailUser, codeUsed } =
+      metadata
 
     const sesion = await this.stripeClient.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -110,11 +107,10 @@ export class PaymentService {
         productIds,
         amount_total,
         orderId,
+        codeUsed,
       },
       currency: 'usd',
     })
-    console.log({ sesion })
-
     return sesion
   }
   private publishOrdersClient(data: CreatePaymentDto) {
