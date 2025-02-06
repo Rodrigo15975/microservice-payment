@@ -18,7 +18,7 @@ export class PaymentService {
     @InjectStripeClient() private readonly stripeClient: Stripe,
     private readonly amqAconnection: AmqpConnection,
   ) {
-    this.logger.debug(
+    this.logger.log(
       'SUCCESS_URL',
       process.env.NODE_ENV === 'production'
         ? process.env.SUCCESS_URL
