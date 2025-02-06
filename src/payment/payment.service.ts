@@ -39,6 +39,7 @@ export class PaymentService {
       (total, item) => total + item.price * item.quantity_buy,
       0,
     )
+
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] =
       dataFormat.map((item) => {
         const itemProportion =
@@ -48,7 +49,7 @@ export class PaymentService {
           price_data: {
             currency: 'usd',
             product_data: {
-              images: item.productVariant.map((i) => i.url),
+              images: item.productVariant.map((i) => i.url.trim()),
               name: item.product,
               description: item.brand,
             },
