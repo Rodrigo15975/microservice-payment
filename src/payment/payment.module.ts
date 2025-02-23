@@ -12,6 +12,13 @@ import { configExchange, configQueue } from './common/config-rabbit'
         uri: configService.getOrThrow('RABBITMQ_URL'),
         exchanges: configExchange,
         queues: configQueue,
+        connectionInitOptions: {
+          timeout: 25000,
+          wait: true,
+        },
+        connectionManagerOptions: {
+          reconnectTimeInSeconds: 2,
+        },
       }),
       inject: [ConfigService],
     }),
